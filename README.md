@@ -1,6 +1,6 @@
 <div align="center">
   <h1>gdown-redact</h1>
-  [GDown](https://github.com/wkentaro/gdown) but hides the links.
+  <p><b></p>[GDown](https://github.com/wkentaro/gdown) but hides the links.<p/><b/>
   <img src="/.readme/cli.png" width="80%">
   <img src="/.readme/python.png" width="80%">
   <br>
