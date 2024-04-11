@@ -1,8 +1,8 @@
 <div align="center">
   <h1>gdown</h1>
   <p><b>Google Drive Public File Downloader when Curl/Wget Fails</b></p>
-  <img src="https://github.com/wkentaro/gdown/raw/main/.readme/cli.png" width="80%">
-  <img src="https://github.com/wkentaro/gdown/raw/main/.readme/python.png" width="80%">
+  <img src="https://github.com/yagmire/gdown-redact/raw/main/.readme/cli.png" width="80%">
+  <img src="https://github.com/yagmire/gdown-redact/raw/main/.readme/python.png" width="80%">
   <br>
   <br>
 </div>
@@ -18,14 +18,8 @@
 
 ## Installation
 
-<a href="https://pypi.org/project/gdown"><img src="https://img.shields.io/pypi/pyversions/gdown.svg"></a>
-<a href="https://pypi.python.org/pypi/gdown"><img src="https://img.shields.io/pypi/v/gdown.svg"></a>
-
 ```bash
-pip install gdown
-
-# to upgrade
-pip install --upgrade gdown
+pip install git+https://github.com/yagmire/gdown-redact.git
 ```
 
 
