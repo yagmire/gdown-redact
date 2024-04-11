@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>gdown</h1>
+  <h1>gdown-redact</h1>
   <p><b>Google Drive Public File Downloader when Curl/Wget Fails</b></p>
   <img src="/.readme/cli.png" width="80%">
   <img src="/.readme/python.png" width="80%">
