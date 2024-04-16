@@ -112,6 +112,7 @@ def download(
     format=None,
     user_agent=None,
     log_messages=None,
+    no_out=False,
 ):
     """Download file from URL.
 
@@ -316,6 +317,24 @@ def download(
     if tmp_file is not None and f.tell() != 0:
         headers = {"Range": "bytes={}-".format(f.tell())}
         res = sess.get(url, headers=headers, stream=True, verify=verify)
+
+    if not no_out:
+        if not quiet:
+            print(log_messages.get("start", "Downloading...\n"), file=sys.stderr, end="")
+            if resume:
+                print("Resume:", tmp_file, file=sys.stderr)
+            if url_origin != url:
+                print("From (original):", url_origin, file=sys.stderr)
+                print("From (redirected):", url, file=sys.stderr)
+            else:
+                print("From:", url, file=sys.stderr)
+            print(
+                log_messages.get(
+                    "output", f"To: {osp.abspath(output) if output_is_path else output}\n"
+                ),
+                file=sys.stderr,
+                end="",
+            )
 
     try:
         total = res.headers.get("Content-Length")
