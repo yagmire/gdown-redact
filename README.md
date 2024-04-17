@@ -1,8 +1,7 @@
 <div align="center">
   <h1>gdown-redact</h1>
   <p><b></p>GDown but hides the links.<p/><b/>
-  <img src="/.readme/cli.png" width="80%">
-  <img src="/.readme/python.png" width="80%">
+  <img src="/.readme/transform.png" width="80%">
   <br>
   <br>
 </div>
