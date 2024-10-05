@@ -1,3 +1,4 @@
+import email.utils
 import os
 import os.path as osp
 import re
@@ -76,6 +77,17 @@ def _get_filename_from_response(response):
     return None
 
 
+def _get_modified_time_from_response(response):
+    if "Last-Modified" not in response.headers:
+        return None
+
+    raw = response.headers["Last-Modified"]
+    if raw is None:
+        return None
+
+    return email.utils.parsedate_to_datetime(raw)
+
+
 def _get_session(proxy, use_cookies, user_agent, return_cookies_file=False):
     sess = requests.session()
 
@@ -120,7 +132,9 @@ def download(
     url: str
         URL. Google Drive URL is also supported.
     output: str
-        Output filename. Default is basename of URL.
+        Output filename/directory. Default is basename of URL.
+        If output ends with separator '/' basename will be kept and the
+        parameter will be treated as parenting directory.
     quiet: bool
         Suppress terminal output. Default is False.
     proxy: str
@@ -138,7 +152,7 @@ def download(
     fuzzy: bool
         Fuzzy extraction of Google Drive's file Id. Default is False.
     resume: bool
-        Resume the download from existing tmp file if possible.
+        Resume interrupted downloads while skipping completed ones.
         Default is False.
     format: str, optional
         Format of Google Docs, Spreadsheets and Slides. Default is:
@@ -264,8 +278,10 @@ def download(
             raise FileURLRetrievalError(message)
 
     filename_from_url = None
+    last_modified_time = None
     if gdrive_file_id and is_gdrive_download_link:
         filename_from_url = _get_filename_from_response(response=res)
+        last_modified_time = _get_modified_time_from_response(response=res)
     if filename_from_url is None:
         filename_from_url = osp.basename(url)
 
@@ -279,9 +295,14 @@ def download(
         output = osp.join(output, filename_from_url)
 
     if output_is_path:
+        if resume and os.path.isfile(output):
+            if not quiet:
+                print(f"Skipping already downloaded file {output}", file=sys.stderr)
+            return output
+
         existing_tmp_files = []
         for file in os.listdir(osp.dirname(output) or "."):
-            if file.startswith(osp.basename(output)):
+            if file.startswith(osp.basename(output)) and file.endswith(".part"):
                 existing_tmp_files.append(osp.join(osp.dirname(output), file))
         if resume and existing_tmp_files:
             if len(existing_tmp_files) != 1:
@@ -304,7 +325,7 @@ def download(
             # mkstemp is preferred, but does not work on Windows
             # https://github.com/wkentaro/gdown/issues/153
             tmp_file = tempfile.mktemp(
-                suffix=tempfile.template,
+                suffix=".part",
                 prefix=osp.basename(output),
                 dir=osp.dirname(output),
             )
@@ -314,15 +335,18 @@ def download(
         f = output
 
     if tmp_file is not None and f.tell() != 0:
-        headers = {"Range": "bytes={}-".format(f.tell())}
+        start_size = f.tell()
+        headers = {"Range": "bytes={}-".format(start_size)}
         res = sess.get(url, headers=headers, stream=True, verify=verify)
+    else:
+        start_size = 0
 
     try:
         total = res.headers.get("Content-Length")
         if total is not None:
-            total = int(total)
+            total = int(total) + start_size
         if not quiet:
-            pbar = tqdm.tqdm(total=total, unit="B", unit_scale=True)
+            pbar = tqdm.tqdm(total=total, unit="B", initial=start_size, unit_scale=True)
         t_start = time.time()
         for chunk in res.iter_content(chunk_size=CHUNK_SIZE):
             f.write(chunk)
@@ -338,6 +362,9 @@ def download(
         if tmp_file:
             f.close()
             shutil.move(tmp_file, output)
+        if output_is_path and last_modified_time:
+            mtime = last_modified_time.timestamp()
+            os.utime(output, (mtime, mtime))
     finally:
         sess.close()
 
